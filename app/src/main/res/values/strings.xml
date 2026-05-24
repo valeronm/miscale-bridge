@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">MiScale Bridge</string>
+    <string name="title_setup">Setup</string>
+    <string name="title_live">Live measurement</string>
+    <string name="label_mac">Scale MAC</string>
+    <string name="label_bindkey">Bindkey (32 hex chars)</string>
+    <string name="label_sex">Sex</string>
+    <string name="label_height_cm">Height (cm)</string>
+    <string name="label_age">Age</string>
+    <string name="label_profile_id">Profile id</string>
+    <string name="action_save_profile">Save profile</string>
+    <string name="action_start_scan">Start scan</string>
+    <string name="action_stop_scan">Stop scan</string>
+    <string name="action_grant_hc">Grant Health Connect permissions</string>
+    <string name="action_write_hc">Write to Health Connect</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_scanning">Scanning for S400…</string>
+    <string name="status_no_bindkey">Bindkey missing — cannot decrypt</string>
+    <string name="privacy_summary">This app reads BLE broadcasts from your Xiaomi scale on-device and writes weight, heart rate and body-composition records to Health Connect. No data leaves your phone.</string>
+</resources>
