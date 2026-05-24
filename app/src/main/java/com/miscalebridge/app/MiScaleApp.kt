@@ -7,6 +7,7 @@ import com.miscalebridge.app.ble.S400Measurement
 import com.miscalebridge.app.ble.ScaleScanner
 import com.miscalebridge.app.compose.DerivedComposition
 import com.miscalebridge.app.compose.computeDerived
+import com.miscalebridge.app.db.AppDatabase
 import com.miscalebridge.app.health.HealthConnectWriter
 import com.miscalebridge.app.history.MeasurementHistory
 import com.miscalebridge.app.profile.ProfileStore
@@ -46,7 +47,7 @@ class MiScaleApp : Application() {
         profileStore = ProfileStore(dataStore)
         scanner = ScaleScanner(this)
         healthWriter = HealthConnectWriter(this)
-        history = MeasurementHistory()
+        history = MeasurementHistory(AppDatabase.build(this).weighInDao(), appScope)
 
         appScope.launch {
             combine(

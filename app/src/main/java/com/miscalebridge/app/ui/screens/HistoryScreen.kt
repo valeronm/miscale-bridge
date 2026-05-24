@@ -8,9 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,18 +65,23 @@ fun HistoryScreen(history: MeasurementHistory) {
 private fun HistoryCard(e: MeasurementHistory.Entry) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.Bottom) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     "${e.measurement.weightKg.f(1)} kg",
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Spacer(Modifier.height(0.dp).then(Modifier))
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    "   ${e.measurement.timestamp.relative()}",
+                    e.measurement.timestamp.relative(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(Modifier.weight(1f))
+                HealthConnectStatusIcon(saved = e.writtenRecordCount > 0)
             }
             val parts = buildList {
                 e.derived.bodyFatPercent?.let { add("BF ${it.f(1)} %") }
@@ -86,16 +97,25 @@ private fun HistoryCard(e: MeasurementHistory.Entry) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            val hcLabel = when (e.writtenRecordCount) {
-                0 -> "not written to Health Connect"
-                1 -> "1 record → Health Connect"
-                else -> "${e.writtenRecordCount} records → Health Connect"
-            }
-            Text(
-                hcLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
+    }
+}
+
+@Composable
+private fun HealthConnectStatusIcon(saved: Boolean) {
+    if (saved) {
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = "Saved to Health Connect",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
+    } else {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Not saved to Health Connect",
+            tint = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
