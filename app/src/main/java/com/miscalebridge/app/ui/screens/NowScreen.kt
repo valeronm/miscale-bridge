@@ -66,6 +66,7 @@ fun NowScreen(
     profileStore: ProfileStore,
     scanner: ScaleScanner,
     healthWriter: HealthConnectWriter,
+    onOpenSettings: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -115,14 +116,16 @@ fun NowScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (derivedPair != null) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (derivedPair != null) {
             val (m, derived) = derivedPair!!
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -186,11 +189,12 @@ fun NowScreen(
                 m.impedanceOhm?.let { MetricRow("50 kHz", "${it.f(1)} Ω") }
                 m.impedanceLowOhm?.let { MetricRow("250 kHz", "${it.f(1)} Ω") }
             }
-        } else if (config == null) {
-            EmptyState(
-                title = "No profile yet",
-                body = "Open the Settings tab to enter your scale's MAC, bindkey, " +
-                    "and your height/age/sex.",
+        } else if (config == null || !bleGranted) {
+            SetupState(
+                profileMissing = config == null,
+                permissionMissing = !bleGranted,
+                onOpenSettings = onOpenSettings,
+                onRequestBlePermission = { bleLauncher.launch(BLE_PERMISSIONS) },
             )
         } else {
             EmptyState(
@@ -198,8 +202,7 @@ fun NowScreen(
                     ScaleScanner.Status.MEASURING -> "Measuring…"
                     ScaleScanner.Status.READY -> "Ready for measurement"
                     ScaleScanner.Status.SEARCHING -> "Searching for scale…"
-                    ScaleScanner.Status.IDLE ->
-                        if (!bleGranted) "Bluetooth permission needed" else "Starting…"
+                    ScaleScanner.Status.IDLE -> "Starting…"
                     ScaleScanner.Status.ERROR_NO_PERMISSION -> "Bluetooth permission missing"
                     ScaleScanner.Status.ERROR_BT_OFF -> "Bluetooth is off"
                 },
@@ -212,11 +215,13 @@ fun NowScreen(
                 },
             )
         }
+        }
 
+        // Sticky bottom: divider + auto-write toggle. Stays put while the
+        // upper section scrolls.
         HorizontalDivider()
-
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -254,13 +259,6 @@ fun NowScreen(
                     }
                 },
             )
-        }
-
-        if (!bleGranted) {
-            Button(
-                onClick = { bleLauncher.launch(BLE_PERMISSIONS) },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Grant Bluetooth permissions") }
         }
     }
 
@@ -335,5 +333,72 @@ private fun EmptyState(title: String, body: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * Setup checklist shown while prerequisites are missing. Each missing item gets
+ * an inline action button so the user never has to hunt for the right tab.
+ */
+@Composable
+private fun SetupState(
+    profileMissing: Boolean,
+    permissionMissing: Boolean,
+    onOpenSettings: () -> Unit,
+    onRequestBlePermission: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text("Let's get set up", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "MiScale Bridge listens for broadcasts from your S400 scale and " +
+                "writes the results to Health Connect. To start, finish the " +
+                "steps below.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (profileMissing) {
+            SetupStep(
+                title = "Add your profile",
+                body = "The app needs your scale's MAC, bindkey, and your " +
+                    "height/age/sex to decrypt broadcasts and compute body " +
+                    "composition.",
+                actionLabel = "Open profile",
+                onAction = onOpenSettings,
+            )
+        }
+        if (permissionMissing) {
+            SetupStep(
+                title = "Allow Bluetooth",
+                body = "Required to receive scale broadcasts. No data leaves " +
+                    "the phone.",
+                actionLabel = "Grant Bluetooth permission",
+                onAction = onRequestBlePermission,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SetupStep(
+    title: String,
+    body: String,
+    actionLabel: String,
+    onAction: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(
+            body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(onClick = onAction) { Text(actionLabel) }
     }
 }

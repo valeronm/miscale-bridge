@@ -69,6 +69,7 @@ fun MainScreen(app: MiScaleApp) {
                     profileStore = app.profileStore,
                     scanner = app.scanner,
                     healthWriter = app.healthWriter,
+                    onOpenSettings = { current = Tab.SETTINGS },
                 )
                 Tab.HISTORY -> HistoryScreen(history = app.history)
                 Tab.SETTINGS -> SettingsScreen(profileStore = app.profileStore)
