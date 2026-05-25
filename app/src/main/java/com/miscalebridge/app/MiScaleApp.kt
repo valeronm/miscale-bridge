@@ -8,6 +8,7 @@ import com.miscalebridge.app.ble.ScaleScanner
 import com.miscalebridge.app.compose.DerivedComposition
 import com.miscalebridge.app.compose.computeDerived
 import com.miscalebridge.app.db.AppDatabase
+import com.miscalebridge.app.health.HealthConnectImporter
 import com.miscalebridge.app.health.HealthConnectWriter
 import com.miscalebridge.app.history.MeasurementHistory
 import com.miscalebridge.app.profile.ProfileStore
@@ -31,6 +32,8 @@ class MiScaleApp : Application() {
         private set
     lateinit var history: MeasurementHistory
         private set
+    lateinit var hcImporter: HealthConnectImporter
+        private set
 
     /** Single source of truth for "current measurement + its derived metrics".
      *  Recomputed exactly once per (measurement, profile) change — the UI and
@@ -47,7 +50,9 @@ class MiScaleApp : Application() {
         profileStore = ProfileStore(dataStore)
         scanner = ScaleScanner(this)
         healthWriter = HealthConnectWriter(this)
-        history = MeasurementHistory(AppDatabase.build(this).weighInDao(), appScope)
+        val dao = AppDatabase.build(this).weighInDao()
+        history = MeasurementHistory(dao, appScope)
+        hcImporter = HealthConnectImporter(this, profileStore, dao)
 
         appScope.launch {
             combine(
@@ -75,7 +80,14 @@ class MiScaleApp : Application() {
                     val written = if (auto) {
                         healthWriter.write(m, p).getOrDefault(0)
                     } else 0
-                    history.add(MeasurementHistory.Entry(m, derived, written))
+                    history.add(
+                        MeasurementHistory.Entry(
+                            measurement = m,
+                            derived = derived,
+                            writtenRecordCount = written,
+                            dataOriginPackageName = packageName,
+                        )
+                    )
                 }
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -55,7 +56,7 @@ fun MainScreen(app: MiScaleApp) {
                     NavigationBarItem(
                         selected = tab == current,
                         onClick = { current = tab },
-                        icon = {},               // text-only — keeps deps small
+                        icon = { Icon(tab.icon, contentDescription = tab.label) },
                         label = { Text(tab.label) },
                     )
                 }
@@ -71,7 +72,7 @@ fun MainScreen(app: MiScaleApp) {
                     healthWriter = app.healthWriter,
                     onOpenSettings = { current = Tab.SETTINGS },
                 )
-                Tab.HISTORY -> HistoryScreen(history = app.history)
+                Tab.HISTORY -> HistoryScreen(history = app.history, app = app)
                 Tab.SETTINGS -> SettingsScreen(profileStore = app.profileStore)
             }
         }

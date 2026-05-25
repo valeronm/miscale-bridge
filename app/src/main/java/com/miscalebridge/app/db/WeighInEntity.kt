@@ -44,6 +44,15 @@ data class WeighInEntity(
     @ColumnInfo(name = "ecw_tbw_ratio_pct") val ecwTbwRatioPct: Double?,
 
     @ColumnInfo(name = "written_record_count") val writtenRecordCount: Int,
+
+    /** Source app's package, e.g. "com.miscalebridge.app" for scale-decoded
+     *  rows or "com.xiaomi.hm.health" for an HC import from Mi Fitness.
+     *  Nullable for legacy rows from a pre-v2 schema that didn't track it. */
+    @ColumnInfo(name = "data_origin_package_name") val dataOriginPackageName: String? = null,
+    /** Human-readable label snapshot from PackageManager at write/import time.
+     *  Lets the History tab show "Mi Fitness" even after that app is
+     *  uninstalled. Nullable for rows we wrote ourselves (UI says "this app"). */
+    @ColumnInfo(name = "data_origin_app_label") val dataOriginAppLabel: String? = null,
 )
 
 fun WeighInEntity.toEntry(): MeasurementHistory.Entry {
@@ -73,7 +82,13 @@ fun WeighInEntity.toEntry(): MeasurementHistory.Entry {
         bcmKg = bcmKg,
         ecwTbwRatioPct = ecwTbwRatioPct,
     )
-    return MeasurementHistory.Entry(m, d, writtenRecordCount)
+    return MeasurementHistory.Entry(
+        measurement = m,
+        derived = d,
+        writtenRecordCount = writtenRecordCount,
+        dataOriginPackageName = dataOriginPackageName,
+        dataOriginAppLabel = dataOriginAppLabel,
+    )
 }
 
 fun MeasurementHistory.Entry.toEntity(): WeighInEntity = WeighInEntity(
@@ -99,4 +114,6 @@ fun MeasurementHistory.Entry.toEntity(): WeighInEntity = WeighInEntity(
     bcmKg = derived.bcmKg,
     ecwTbwRatioPct = derived.ecwTbwRatioPct,
     writtenRecordCount = writtenRecordCount,
+    dataOriginPackageName = dataOriginPackageName,
+    dataOriginAppLabel = dataOriginAppLabel,
 )

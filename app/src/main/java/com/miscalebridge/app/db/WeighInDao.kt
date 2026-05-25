@@ -17,6 +17,18 @@ interface WeighInDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: WeighInEntity)
 
+    /** Insert only if the (profileId, timestamp) row doesn't already exist.
+     *  Used by the HC importer so re-imports don't blat user-edited or
+     *  scale-decoded rows that happen to share a timestamp.
+     *  Returns the new row id, or -1L if a row already existed. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfMissing(entity: WeighInEntity): Long
+
+    /** Existence/contents probe so the importer can decide whether the
+     *  matching row is scale-decoded (preserve) or a prior import (replace). */
+    @Query("SELECT * FROM weigh_ins WHERE profile_id = :profileId AND timestamp_epoch_sec = :timestampEpochSec LIMIT 1")
+    suspend fun findByKey(profileId: Int, timestampEpochSec: Long): WeighInEntity?
+
     @Query("DELETE FROM weigh_ins")
     suspend fun clear()
 }

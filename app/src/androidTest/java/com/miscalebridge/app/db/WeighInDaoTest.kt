@@ -71,6 +71,23 @@ class WeighInDaoTest {
         dao.clear()
         assertTrue(dao.observeAll().first().isEmpty())
     }
+
+    @Test fun insertIfMissingSkipsExisting() = runTest {
+        val original = sampleEntity(weightKg = 70.0)
+        dao.upsert(original)
+        val ignored = dao.insertIfMissing(original.copy(weightKg = 71.0))
+        assertTrue("insertIfMissing should return -1L on conflict", ignored == -1L)
+        // Existing row stays untouched — IGNORE means we keep the first writer.
+        val rows = dao.observeAll().first()
+        assertEquals(1, rows.size)
+        assertEquals(70.0, rows[0].weightKg, 0.0)
+    }
+
+    @Test fun insertIfMissingAddsNew() = runTest {
+        val rowId = dao.insertIfMissing(sampleEntity(ts = 5_000L))
+        assertTrue("insertIfMissing should return >= 0 row id on success", rowId >= 0L)
+        assertEquals(1, dao.observeAll().first().size)
+    }
 }
 
 internal fun sampleEntity(

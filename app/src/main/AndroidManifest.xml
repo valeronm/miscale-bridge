@@ -23,7 +23,9 @@
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
-    <!-- Health Connect: declare every record type we read or write. -->
+    <!-- Health Connect: must declare every record type the app might
+         request a permission for. HC's permission UI silently drops any
+         runtime request for a record type that isn't declared here. -->
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />
     <uses-permission android:name="android.permission.health.WRITE_BONE_MASS" />
@@ -31,12 +33,30 @@
     <uses-permission android:name="android.permission.health.WRITE_BODY_WATER_MASS" />
     <uses-permission android:name="android.permission.health.WRITE_BASAL_METABOLIC_RATE" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
-    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
+    <uses-permission android:name="android.permission.health.READ_BONE_MASS" />
+    <uses-permission android:name="android.permission.health.READ_LEAN_BODY_MASS" />
+    <uses-permission android:name="android.permission.health.READ_BODY_WATER_MASS" />
+    <uses-permission android:name="android.permission.health.READ_BASAL_METABOLIC_RATE" />
+    <!-- Without this, readRecords silently caps at the last 30 days, even
+         though HC has data going back further. Required for the import-all
+         use case (years of historical weigh-ins from Mi Fitness, Fitbit, etc.). -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <!-- Health Connect package visibility (required from API 30+). -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
     </queries>
+
+    <!-- Android 11+ hides arbitrary installed packages from PackageManager
+         queries unless declared above or granted this permission. We need it
+         so the HC importer can resolve a human-readable app label for the
+         source of each imported record (Mi Fitness, Fitbit, Zepp, …) — the
+         set of source apps is open-ended, so package-by-package <queries>
+         isn't viable. Personal side-load only; Play Store distribution would
+         need a separate policy justification. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
     <application
         android:name=".MiScaleApp"

@@ -94,7 +94,7 @@ fun NowScreen(
     val hcLauncher = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
-        if (granted.containsAll(HealthConnectPermissions.ALL)) {
+        if (granted.containsAll(HealthConnectPermissions.WRITES)) {
             scope.launch { profileStore.setAutoWrite(true) }
             // Surface a confirm dialog for the already-visible reading,
             // if any — never write it silently behind the user's back.
@@ -250,11 +250,11 @@ fun NowScreen(
                             .getOrCreate(context)
                             .permissionController
                             .getGrantedPermissions()
-                        if (granted.containsAll(HealthConnectPermissions.ALL)) {
+                        if (granted.containsAll(HealthConnectPermissions.WRITES)) {
                             profileStore.setAutoWrite(true)
                             pendingOneShot = measurement
                         } else {
-                            hcLauncher.launch(HealthConnectPermissions.ALL)
+                            hcLauncher.launch(HealthConnectPermissions.WRITES)
                         }
                     }
                 },
